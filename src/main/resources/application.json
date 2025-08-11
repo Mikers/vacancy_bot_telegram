@@ -1,0 +1,6 @@
+{
+  "bot_token": "${BOT_TOKEN}",
+  "bot_name": "VacancyTrackerBot",
+  "vacancy_api_url": "https://opendata.trudvsem.ru/api/v1/vacancies",
+  "data_directory": "data"
+}
