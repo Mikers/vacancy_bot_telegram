@@ -1,3 +1,4 @@
+
 plugins {
     id 'java'
     id 'application'
@@ -17,40 +18,43 @@ repositories {
 }
 
 dependencies {
-    // Telegram Bot API - Required for bot functionality (Updated to latest)
+    // Telegram Bot API
     implementation 'org.telegram:telegrambots-longpolling:9.0.0'
     implementation 'org.telegram:telegrambots-client:9.0.0'
     implementation 'org.telegram:telegrambots-meta:9.0.0'
     
-    // HTTP Client - Modern HTTP client for REST API calls
+    // HTTP Client
     implementation 'com.squareup.okhttp3:okhttp:5.1.0'
     
-    // JSON Processing - Industry standard JSON library
+    // JSON Processing
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.0'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.0'
     implementation 'com.fasterxml.jackson.module:jackson-module-parameter-names:2.19.0'
     
-    // Logging - Standard logging facade with implementation
+    // Logging
     implementation 'org.slf4j:slf4j-api:2.0.17'
     implementation 'ch.qos.logback:logback-classic:1.5.18'
     
-    // Utilities - Very useful utility libraries (not frameworks)
+    // Utilities
     implementation 'org.apache.commons:commons-lang3:3.17.0'
     implementation 'commons-io:commons-io:2.18.0'
     implementation 'com.google.guava:guava:33.3.1-jre'
     
-    // Validation - Bean validation utilities
+    // Validation
     implementation 'jakarta.validation:jakarta.validation-api:3.1.0'
     implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
     implementation 'org.glassfish:jakarta.el:4.0.2'
     
-    // Lombok - Code generation library to reduce boilerplate
+    // Lombok
     compileOnly 'org.projectlombok:lombok:1.18.36'
     annotationProcessor 'org.projectlombok:lombok:1.18.36'
     
-    // Testing - Modern testing stack
+    // Testing
     testImplementation platform('org.junit:junit-bom:5.11.3')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.mockito:mockito-core:5.14.2'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.14.2'
     testImplementation 'org.assertj:assertj-core:3.26.3'
@@ -76,7 +80,7 @@ test {
     
     testLogging {
         events "passed", "skipped", "failed"
-        exceptionFormat "full"
+        exceptionFormat = "full"
     }
 }
 
@@ -116,8 +120,7 @@ jacocoTestCoverageVerification {
 
 check.dependsOn jacocoTestCoverageVerification
 
-// Custom task to run the bot
-task runBot(type: JavaExec) {
+tasks.register('runBot', JavaExec) {
     group = 'application'
     description = 'Run the Vacancy Tracker Bot'
     classpath = sourceSets.main.runtimeClasspath
