@@ -67,21 +67,18 @@ public class StartCommand implements BotCommand {
         StringBuilder sb = new StringBuilder("\n\nРанее заданные фильтры:\n");
         
         var criteria = user.getSearchCriteria();
-        if (criteria.isEmpty()) {
-            sb.append("Фильтры не заданы");
-        } else {
-            if (criteria.getRegionCode() != null) {
-                sb.append("Регион: [").append(criteria.getRegionCode()).append("]\n");
-            }
-            if (criteria.getMinimumExperience() != null) {
-                sb.append("Минимальный опыт: [").append(criteria.getMinimumExperience()).append(" лет]\n");
-            }
-            if (criteria.getMinimumSalary() != null) {
-                sb.append("Минимальная зарплата: [").append(criteria.getMinimumSalary()).append("]\n");
-            }
-            if (criteria.getKeyword() != null && !criteria.getKeyword().isEmpty()) {
-                sb.append("Слово для поиска: [").append(criteria.getKeyword()).append("]\n");
-            }
+        // Note: This method is only called when criteria is not empty
+        if (criteria.getRegionCode() != null) {
+            sb.append("Регион: [").append(criteria.getRegionCode()).append("]\n");
+        }
+        if (criteria.getMinimumExperience() != null) {
+            sb.append("Минимальный опыт: [").append(criteria.getMinimumExperience()).append(" лет]\n");
+        }
+        if (criteria.getMinimumSalary() != null) {
+            sb.append("Минимальная зарплата: [").append(criteria.getMinimumSalary()).append("]\n");
+        }
+        if (criteria.getKeyword() != null && !criteria.getKeyword().isEmpty()) {
+            sb.append("Слово для поиска: [").append(criteria.getKeyword()).append("]\n");
         }
         
         return sb.toString();

@@ -33,6 +33,9 @@ public class UserServiceImpl implements UserService {
     
     @Override
     public void delete(Long userId) {
+        BotUser user = findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+        
         userRepository.delete(userId);
         logger.info("User deleted: {}", userId);
     }
@@ -47,7 +50,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateSearchCriteria(Long userId, SearchCriteria criteria) {
         BotUser user = findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
         
         user.setSearchCriteria(criteria);
         save(user);
@@ -57,7 +60,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateTimezone(Long userId, ZoneOffset timezone) {
         BotUser user = findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
         
         user.setTimezoneOffset(timezone);
         save(user);
@@ -67,7 +70,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateNotificationTime(Long userId, String notificationTime) {
         BotUser user = findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
         
         user.setNotificationTime(notificationTime);
         save(user);
@@ -77,7 +80,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deactivateUser(Long userId) {
         BotUser user = findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
         
         user.setActive(false);
         save(user);

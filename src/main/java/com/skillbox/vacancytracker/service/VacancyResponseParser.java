@@ -41,7 +41,7 @@ public class VacancyResponseParser {
         if (vacanciesNode.isArray()) {
             for (JsonNode vacancyNode : vacanciesNode) {
                 JsonNode vacancy = vacancyNode.path(ApiConstants.JSON_VACANCY);
-                if (!vacancy.isMissingNode()) {
+                if (!vacancy.isMissingNode() && !vacancy.isNull()) {
                     Vacancy parsedVacancy = parseVacancy(vacancy);
                     if (parsedVacancy != null) {
                         vacancies.add(parsedVacancy);
@@ -59,9 +59,9 @@ public class VacancyResponseParser {
             Vacancy vacancy = new Vacancy();
             
             vacancy.setId(vacancyNode.path("id").asText());
-            vacancy.setTitle(vacancyNode.path("job-name").asText());
-            vacancy.setCompanyName(vacancyNode.path("company").path("name").asText());
-            vacancy.setDescription(vacancyNode.path("duty").asText());
+            vacancy.setTitle(parseTextOrNull(vacancyNode.path("job-name")));
+            vacancy.setCompanyName(parseTextOrNull(vacancyNode.path("company").path("name")));
+            vacancy.setDescription(parseTextOrNull(vacancyNode.path("duty")));
             vacancy.setUrl(ApiConstants.API_VACANCY_URL_PREFIX + vacancy.getId());
             
             JsonNode salaryNode = vacancyNode.path("salary");
@@ -77,19 +77,29 @@ public class VacancyResponseParser {
             }
             
             JsonNode regionNode = vacancyNode.path("region");
-            if (!regionNode.isMissingNode()) {
-                vacancy.setRegion(regionNode.path("name").asText());
+            if (!regionNode.isMissingNode() && !regionNode.isNull()) {
+                vacancy.setRegion(parseTextOrNull(regionNode.path("name")));
                 vacancy.setRegionCode(parseInteger(regionNode.path("code")));
             }
             
             String createdDate = vacancyNode.path("creation-date").asText();
             if (!createdDate.isEmpty()) {
-                vacancy.setCreatedDate(LocalDateTime.parse(createdDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                try {
+                    vacancy.setCreatedDate(LocalDateTime.parse(createdDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                } catch (Exception e) {
+                    logger.debug("Failed to parse creation date: {}", createdDate);
+                    vacancy.setCreatedDate(null);
+                }
             }
             
             String modifiedDate = vacancyNode.path("modification-date").asText();
             if (!modifiedDate.isEmpty()) {
-                vacancy.setModifiedDate(LocalDateTime.parse(modifiedDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                try {
+                    vacancy.setModifiedDate(LocalDateTime.parse(modifiedDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                } catch (Exception e) {
+                    logger.debug("Failed to parse modification date: {}", modifiedDate);
+                    vacancy.setModifiedDate(null);
+                }
             }
             
             return vacancy;
@@ -104,16 +114,34 @@ public class VacancyResponseParser {
         if (node == null || node.isMissingNode() || node.isNull()) {
             return null;
         }
+        if (!node.isNumber() && !node.isTextual()) {
+            return null;
+        }
         try {
-            return node.asInt();
+            if (node.isNumber()) {
+                return node.asInt();
+            } else {
+                String text = node.asText();
+                return Integer.parseInt(text);
+            }
         } catch (Exception e) {
             return null;
         }
     }
     
+    private String parseTextOrNull(JsonNode node) {
+        if (node == null || node.isMissingNode() || node.isNull()) {
+            return null;
+        }
+        String text = node.asText();
+        return text.isEmpty() ? null : text;
+    }
+    
     private List<Vacancy> filterVacancies(List<Vacancy> vacancies, SearchCriteria criteria) {
         return vacancies.stream()
                 .filter(vacancy -> matchesSalaryCriteria(vacancy, criteria))
+                .filter(vacancy -> matchesKeywordCriteria(vacancy, criteria))
+                .filter(vacancy -> matchesExperienceCriteria(vacancy, criteria))
                 .toList();
     }
     
@@ -134,5 +162,31 @@ public class VacancyResponseParser {
         }
         
         return salaryFrom == null && salaryTo == null;
+    }
+    
+    private boolean matchesKeywordCriteria(Vacancy vacancy, SearchCriteria criteria) {
+        if (criteria.getKeyword() == null || criteria.getKeyword().isEmpty()) {
+            return true;
+        }
+        
+        String keyword = criteria.getKeyword().toLowerCase();
+        String title = vacancy.getTitle() != null ? vacancy.getTitle().toLowerCase() : "";
+        String company = vacancy.getCompanyName() != null ? vacancy.getCompanyName().toLowerCase() : "";
+        String description = vacancy.getDescription() != null ? vacancy.getDescription().toLowerCase() : "";
+        
+        return title.contains(keyword) || company.contains(keyword) || description.contains(keyword);
+    }
+    
+    private boolean matchesExperienceCriteria(Vacancy vacancy, SearchCriteria criteria) {
+        if (criteria.getMinimumExperience() == null) {
+            return true;
+        }
+        
+        Integer experience = vacancy.getExperienceRequired();
+        if (experience == null) {
+            return true;
+        }
+        
+        return experience >= criteria.getMinimumExperience();
     }
 }
